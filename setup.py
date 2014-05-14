@@ -45,7 +45,7 @@ luigi_package_data = [os.path.join(dirpath.replace("luigi/", ""), ext)
                       for ext in ["*.html", "*.js", "*.css", "*.png"]]
 
 setup(
-    name='luigi',
+    name='python-luigi',
     version='1.0.13',
     description='Workflow mgmgt + task scheduling + dependency resolution',
     long_description=long_description,
@@ -53,6 +53,9 @@ setup(
     author_email='erikbern@spotify.com',
     url='https://github.com/spotify/luigi',
     license='Apache License 2.0',
+    data_files=[
+        ('/etc/init.d', ['rpm/luigid'])
+    ],
     packages=[
         'luigi',
         'luigi.contrib',

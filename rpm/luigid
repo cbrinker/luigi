@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# luigid        Startup script for luigid.
+#
+# chkconfig: 2345 12 88
+# description: Luigi central planner server.
+### BEGIN INIT INFO
+# Provides: $syslog
+# Required-Start: $local_fs
+# Required-Stop: $local_fs
+# Default-Start:  2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Luigi central planner server
+# Description: Process to run the luigi central planner
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Luigi central planner server"
+NAME=luigid
+DAEMON=/usr/bin/$NAME
+PIDFILE=/var/run/luigi/$NAME.pid
+DAEMON_ARGS="--background --pidfile $PIDFILE"
+SCRIPTNAME=/etc/init.d/$NAME
+LOCKFILE=/var/lock/subsys/$NAME
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/sysconfig/$NAME ] && . /etc/sysconfig/$NAME
+
+# Source function library.
+. /etc/init.d/functions
+
+start() {
+	[ -x $DAEMON ] || exit 2
+
+	umask 077
+
+        echo -n $"Starting $NAME: "
+        daemon --pidfile "$PIDFILE" $DAEMON $DAEMON_ARGS
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $LOCKFILE
+        return $RETVAL
+}
+stop() {
+        echo -n $"Shutting down $NAME: "
+        killproc -p "$PIDFILE" $DAEMON
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+        return $RETVAL
+}
+rhstatus() {
+        status -p "$PIDFILE" -l $NAME $DAEMON
+}
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  reload)
+        exit 3
+        ;;
+  force-reload)
+        restart
+        ;;
+  status)
+        rhstatus
+        ;;
+  condrestart|try-restart)
+        rhstatus >/dev/null 2>&1 || exit 0
+        restart
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|force-reload|condrestart|try-restart}"
+        exit 3
+esac
+
+exit $?
