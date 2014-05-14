@@ -27,9 +27,9 @@ try:
 
     long_description = ['NOTE: For the latest code and documentation, please go to https://github.com/spotify/luigi', '']
 
-    for line in open('README.md'):
+    for line in open('README.rst'):
         # Strip all images from the pypi description
-        if not line.startswith('!') and not line.startswith('```'):
+        if not line.startswith('.. figure:') and not line.startswith('   :'):
             for line in textwrap.wrap(line, 120, drop_whitespace=False):
                 long_description.append(line)
 
