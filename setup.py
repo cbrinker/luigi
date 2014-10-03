@@ -19,34 +19,21 @@ try:
 except:
     from distutils.core import setup
 
-try:
-    # Convert the Markdown Readme into raw text so that it looks good in PyPi.
-    # Simple workaround because PyPi does't support Markdown.
-    # https://pypi.python.org/pypi/luigi
-    import textwrap
+def get_static_files(path):
+    return [os.path.join(dirpath.replace("luigi/", ""), ext) 
+            for (dirpath, dirnames, filenames) in os.walk(path)
+            for ext in ["*.html", "*.js", "*.css", "*.png"]]
 
-    long_description = ['NOTE: For the latest code and documentation, please go to https://github.com/spotify/luigi', '']
+luigi_package_data = sum(map(get_static_files, ["luigi/static", "luigi/templates"]), [])
 
-    for line in open('README.rst'):
-        # Strip all images from the pypi description
-        if not line.startswith('.. figure:') and not line.startswith('   :'):
-            for line in textwrap.wrap(line, 120, drop_whitespace=False):
-                long_description.append(line)
-
-    long_description = '\n'.join(long_description)
-
-except Exception, e:
-    import traceback
-    traceback.print_exc()
-    long_description = ''
-
-luigi_package_data = [os.path.join(dirpath.replace("luigi/", ""), ext)
-                      for (dirpath, dirnames, filenames) in os.walk("luigi/static")
-                      for ext in ["*.html", "*.js", "*.css", "*.png"]]
+long_description = ['Note: For the latest source, discussion, etc, please visit the `Github repository <https://github.com/spotify/luigi>`_\n\n']
+for line in open('README.rst'):
+    long_description.append(line)
+long_description = ''.join(long_description)
 
 setup(
     name='python-luigi',
-    version='1.0.13',
+    version='1.0.19',
     description='Workflow mgmgt + task scheduling + dependency resolution',
     long_description=long_description,
     author='Erik Bernhardsson',
@@ -64,6 +51,7 @@ setup(
         'luigi': luigi_package_data
     },
     scripts=[
-        'bin/luigid'
+        'bin/luigid',
+        'bin/luigi'
     ]
 )

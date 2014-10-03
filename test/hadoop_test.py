@@ -103,10 +103,23 @@ class MapOnlyJob(TestJobTask):
     def output(self):
         return File("luigitest-3")
 
+class UnicodeJob(TestJobTask):
+    def mapper(self, line):
+        yield u'test', 1
+        yield 'test', 1
+
+    def reducer(self, word, occurences):
+        yield word, sum(occurences)
+
+    def requires(self):
+        return Words()
+
+    def output(self):
+        return File("luigitest-4")
 
 class HadoopJobTest(unittest.TestCase):
     def setUp(self):
-        MockFile._file_contents = {}
+        MockFile._file_contents.clear()
 
     def read_output(self, p):
         count = {}
@@ -132,6 +145,18 @@ class HadoopJobTest(unittest.TestCase):
             c.append(line.strip())
         self.assertEquals(c[0], 'kj')
         self.assertEquals(c[4], 'ljoi')
+
+    def test_unicode_job(self):
+        luigi.build([UnicodeJob()], local_scheduler=True)
+        c = []
+        for line in File('luigitest-4').open('r'):
+            c.append(line)
+        # Make sure unicode('test') isnt grouped with str('test')
+        # Since this is what happens when running on cluster
+        self.assertEquals(len(c), 2)
+        self.assertEquals(c[0], "test\t2\n")
+        self.assertEquals(c[0], "test\t2\n")
+
 
     def test_run_hadoop_job_failure(self):
         def Popen_fake(arglist, stdout=None, stderr=None, env=None, close_fds=True):
@@ -255,7 +280,8 @@ class CreatePackagesArchive(unittest.TestCase):
         add.assert_any_call('test/create_packages_archive_root/package/submodule_without_imports.py', 'package/submodule_without_imports.py')
         add.assert_any_call('test/create_packages_archive_root/package/subpackage/__init__.py', 'package/subpackage/__init__.py')
         add.assert_any_call('test/create_packages_archive_root/package/subpackage/submodule.py', 'package/subpackage/submodule.py')
-        assert add.call_count == 6
+        add.assert_any_call('test/create_packages_archive_root/package.egg-info/top_level.txt', 'package.egg-info/top_level.txt')
+        assert add.call_count == 7
 
     def _assert_package_subpackage(self, add):
         add.assert_any_call('test/create_packages_archive_root/package/__init__.py', 'package/__init__.py')
